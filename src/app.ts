@@ -17,10 +17,15 @@ import { stripeWebhook } from "./controllers/api/OrderController";
 
 export const app = express();
 
+app.set('trust proxy', 1);
+
 app.set("view engine", "ejs");
 app.set("views", "src/views");
+app.get("/", (req, res) => {
+  res.send("HomeNest Backend is running!");
+});
 
-var whitelist = ["http://example1.com", "http://localhost:5173"];
+var whitelist = ["http://example1.com", "http://localhost:5173", "https://homenest.maymyatmon.com/"];
 var corsOptions = {
   origin: function (
     origin: any,
