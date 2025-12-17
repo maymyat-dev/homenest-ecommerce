@@ -10,6 +10,7 @@ import { auth } from "../../../middlewares/auth";
 import upload, { uploadMemory } from "../../../middlewares/uploadFile";
 import { getPost, getPostsByPagination, getInfinitePostsByPagination } from "../../../controllers/api/postController";
 import { getCategoryType, getProduct, getProductsByPagination, toggleFavorite } from "../../../controllers/api/productController";
+import { createCheckoutSession } from "../../../controllers/api/OrderController";
 
 const router = express.Router();
 
@@ -37,4 +38,7 @@ router.get("/products", auth, getProductsByPagination); //Cursor-based Paginatio
 
 router.get("/filter-type", auth, getCategoryType);
 router.patch("/products/toggle-favorite", auth, toggleFavorite);
+
+router.post("/create-checkout-session", auth, createCheckoutSession);
+
 export default router;

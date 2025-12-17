@@ -12,6 +12,8 @@ import path from "path";
 import routes from "./routes/v1";
 import cron from "node-cron";
 import { createOrUpdateSettingStatus, getSettingStatus } from "./services/settingService";
+import bodyParser from "body-parser";
+import { stripeWebhook } from "./controllers/api/OrderController";
 
 export const app = express();
 
@@ -34,6 +36,11 @@ var corsOptions = {
   },
   credentials: true, // allow credentials (cookies, authorization headers, etc.) to be sent with requests
 };
+app.post(
+  "/api/v1/user/webhook",
+  bodyParser.raw({ type: "application/json" }),
+  stripeWebhook
+);
 app
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
