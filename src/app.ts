@@ -100,3 +100,4 @@ cron.schedule("*/5 * * * *", async () => {
 });
 
 
+export default app;
