@@ -5,7 +5,7 @@ export const redis = new Redis({
     port: Number(process.env.REDIS_PORT!) || 6379,
     // port: parseInt(process.env.REDIS_PORT!),
     maxRetriesPerRequest: null, //for bullMQ
-    password: process.env.REDIS_PASSWORD,
-    tls: {}
+    password: process.env.REDIS_PASSWORD || undefined,
+    // tls: {}
 })
 

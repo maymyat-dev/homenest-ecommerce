@@ -47,7 +47,10 @@ export const createOneProduct = async (data: any) => {
   }
 
   return prisma.product.create({
-    data: productData
+    data: productData,
+    include: {
+      images: true
+    }
   });
 };
 
@@ -108,6 +111,12 @@ export const updateOneProduct = async (productId: number, data: any) => {
   return prisma.product.update({
     where: { id: productId },
     data: productData,
+    include: {
+      images: true, 
+      category: true,
+      type: true,
+      tags: true,
+    }
   });
 }
 

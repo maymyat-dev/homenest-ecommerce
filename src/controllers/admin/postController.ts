@@ -81,28 +81,9 @@ export const createPost = [
     }
     const { title, content, body, category, type, tags } = req.body;
     const user = req.user;
-   
+
     checkUploadFile(req.file);
 
-    const splitFileName = req.file?.filename.split(".")[0];
-
-    await ImageQueue.add(
-      "optimize-image",
-      {
-        filePath: req.file?.path,
-        fileName: `${splitFileName}.webp`,
-        width: 835,
-        height: 577,
-        quality: 100,
-      },
-      {
-        attempts: 3,
-        backoff: {
-          type: "exponential",
-          delay: 1000,
-        },
-      }
-    );
     const data: PostArgs = {
       title,
       content,
@@ -115,14 +96,34 @@ export const createPost = [
     };
     const post = await createOnePost(data);
 
-    await cacheQueue.add("invalidate-post-cache", {
-      pattern: "posts:*",
-    }, {
-      jobId: `invalidate-${Date.now()}`,
-      priority: 1,
+    const splitFileName = req.file?.filename.split(".")[0];
 
+    await ImageQueue.add(
+      "optimize-image",
+      {
+        filePath: req.file?.path,
+        fileName: `${splitFileName}.webp`,
+        postId: post.id,
+        width: 835,
+        height: 577,
+        quality: 100,
+      },
+      {
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
+      }
+    );
 
-    });
+    await cacheQueue.add(
+      "invalidate-post-cache",
+      {
+        pattern: "posts:*",
+      },
+      {
+        jobId: `invalidate-${Date.now()}`,
+        priority: 1,
+      }
+    );
 
     res
       .status(201)
@@ -193,7 +194,7 @@ export const updatePost = [
       type,
       tags,
     };
-
+ const postUpdated = await updateOnePost(post.id, data);
     if (req.file) {
       data.image = req.file.filename;
 
@@ -204,6 +205,7 @@ export const updatePost = [
         {
           filePath: req.file.path,
           fileName: `${splitFileName}.webp`,
+          postId: postUpdated.id,
           width: 835,
           height: 577,
           quality: 100,
@@ -218,25 +220,29 @@ export const updatePost = [
       );
       const optimizedFile = post.image.split(".")[0] + ".webp";
       await removeFiles(post.image, optimizedFile);
+      await updateOnePost(postUpdated.id, { image: req.file.filename } as any);
     }
 
-    const postUpdated = await updateOnePost(post.id, data);
-     await cacheQueue.add("invalidate-post-cache", {
-      pattern: "posts:*",
-    }, {
-      jobId: `invalidate-${Date.now()}`,
-      priority: 1,
-      
+    await cacheQueue.add(
+      "invalidate-post-cache",
+      {
+        pattern: "posts:*",
+      },
+      {
+        jobId: `invalidate-${Date.now()}`,
+        priority: 1,
+      }
+    );
 
-    });
-
-    res.status(200).json({ message: "Successfully updated post.", postId: postUpdated.id });
+    res
+      .status(200)
+      .json({ message: "Successfully updated post.", postId: postUpdated.id });
   },
 ];
 
 export const deletePost = [
   body("postId", "Post Id is required").isInt({ gt: 0 }),
-  
+
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
@@ -264,14 +270,16 @@ export const deletePost = [
     console.log("optimizedFile: ", optimizedFile);
     await removeFiles(post!.image, optimizedFile);
 
-     await cacheQueue.add("invalidate-post-cache", {
-      pattern: "posts:*",
-    }, {
-      jobId: `invalidate-${Date.now()}`,
-      priority: 1,
-      
-
-    });
+    await cacheQueue.add(
+      "invalidate-post-cache",
+      {
+        pattern: "posts:*",
+      },
+      {
+        jobId: `invalidate-${Date.now()}`,
+        priority: 1,
+      }
+    );
 
     res
       .status(200)

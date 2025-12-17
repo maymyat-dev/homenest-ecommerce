@@ -59,17 +59,13 @@ export const createOnePost = async (postData: PostArgs) => {
 
   return prisma.post.create({
     data,
+    include: {
+      tags: true,
+      category: true,
+      type: true,
+    }
   });
 };
-
-export const getPostById = async(id: number)=> {
-  return prisma.post.findUnique({
-    where: {
-      id
-    }
-  })
-}
-
 export const updateOnePost = async (postId: number, postData: PostArgs) => {
   const data: any = {
     title: postData.title,
@@ -112,8 +108,23 @@ export const updateOnePost = async (postId: number, postData: PostArgs) => {
   return prisma.post.update({
     where: { id: postId },
     data,
+    include: {
+      tags: true,
+      category: true,
+      type: true,
+    },
   });
 };
+
+export const getPostById = async(id: number)=> {
+  return prisma.post.findUnique({
+    where: {
+      id
+    }
+  })
+}
+
+
 
 export const deleteOnePost = async (id: number) => {
   return prisma.post.delete({

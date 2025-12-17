@@ -16,7 +16,7 @@ export function createRandomUser() {
     count: 10,
   });
 
-// const userData: Prisma.UserCreateInput[] = [
+
 //   {
 //     phone: "1234567891",
 //     password: "",
@@ -53,7 +53,32 @@ async function main() {
     await prisma.user.create({ data: u });
   }
   console.log(`Seeding finished.`);
+
+  console.log(`Seeding products...`);
+  // const products = [
+  //   {
+  //     name: "Modern Sofa",
+  //     price: 550,
+  //     description: "Comfortable and stylish modern sofa",
+  //     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc",
+  //   },
+  //   {
+  //     name: "Wooden Dining Table",
+  //     price: 320,
+  //     description: "Solid oak wood dining table",
+  //     image: "https://images.unsplash.com/photo-1577142217060-23914194bd61",
+  //   },
+  //   {
+  //     name: "Ergonomic Chair",
+  //     price: 180,
+  //     description: "Perfect for long working hours",
+  //     image: "https://images.unsplash.com/photo-1505797149-35ebcb05a6fd",
+  //   }
+  // ];
+  
 }
+
+
 
 main()
   .then(async () => {

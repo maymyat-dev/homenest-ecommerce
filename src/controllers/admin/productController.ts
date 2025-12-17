@@ -90,28 +90,6 @@ export const createProduct = [
 
     checkUploadFile(req.files && req.files.length > 0);
 
-    await Promise.all(
-      req.files.map(async (file: any) => {
-        const splitFileName = file.filename.split(".")[0];
-        return ImageQueue.add(
-          "optimize-image",
-          {
-            filePath: file.path,
-            fileName: `${splitFileName}.webp`,
-            width: 835,
-            height: 577,
-            quality: 100,
-          },
-          {
-            attempts: 3,
-            backoff: {
-              type: "exponential",
-              delay: 1000,
-            },
-          }
-        );
-      })
-    );
 
     const originalFileNames = req.files.map((file: any) => ({
       path: file.filename,
@@ -130,23 +108,34 @@ export const createProduct = [
     };
     const product = await createOneProduct(data);
 
-    await cacheQueue.add(
-      "invalidate-product-cache",
+   await Promise.all(
+  req.files.map(async (file: any, index: number) => {
+    const splitFileName = file.filename.split(".")[0];
+    
+    const dbImage = product.images[index]; 
+
+    return ImageQueue.add(
+      "optimize-image",
       {
-        pattern: "products:*",
+        filePath: file.path,
+        fileName: `${splitFileName}.webp`,
+        imageId: dbImage.id, // အခု ID ပါသွားပါပြီ
+        productId: product.id,
+        width: 835,
+        height: 577,
+        quality: 100,
       },
       {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
+        attempts: 3,
+        backoff: { type: "exponential", delay: 1000 },
       }
     );
-
-    res
-      .status(201)
-      .json({
-        message: "Successfully created new product.",
-        productId: product.id,
-      });
+  })
+);
+res.status(201).json({
+  message: "Successfully created new product.",
+  productId: product.id,
+});
   },
 ];
 
@@ -255,23 +244,38 @@ export const updateProduct = [
 
     const productUpdated = await updateOneProduct(product.id, data);
 
-    await cacheQueue.add(
-      "invalidate-product-cache",
-      {
-        pattern: `products:*`,
-      },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
-      }
-    );
+    if (req.files && req.files.length > 0) {
+  await Promise.all(
+    req.files.map(async (file: any, index: number) => {
+      const splitFileName = file.filename.split(".")[0];
+    
+      const dbImage = productUpdated.images.find(img => img.path === file.filename);
 
-    res
-      .status(200)
-      .json({
-        message: "Successfully updated product.",
-        productId: productUpdated.id,
-      });
+      if (dbImage) {
+        return ImageQueue.add(
+          "optimize-image",
+          {
+            filePath: file.path,
+            fileName: `${splitFileName}.webp`,
+            imageId: dbImage.id,
+            productId: productUpdated.id,
+            width: 835,
+            height: 577,
+            quality: 100,
+          },
+          {
+            attempts: 3,
+            backoff: { type: "exponential", delay: 1000 },
+          }
+        );
+      }
+    })
+  );
+}
+res.status(200).json({
+  message: "Successfully updated product.",
+  productId: productUpdated.id,
+});
   },
 ];
 
