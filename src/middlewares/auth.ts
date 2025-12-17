@@ -8,7 +8,7 @@ interface CustomRequest extends Request {
   userId?: number;
 }
 
-export const auth = (req: CustomRequest, res: Response, next: NextFunction) => {
+export const auth = async(req: CustomRequest, res: Response, next: NextFunction) => {
   // const platform = req.headers["x-platform"];
   // if (platform === "mobile") {
   //   const accessTokenMobile = req.headers.authorization?.split(" ")[1];
@@ -133,7 +133,7 @@ export const auth = (req: CustomRequest, res: Response, next: NextFunction) => {
   };
 
   if (!accessToken) {
-    generateNewTokens();
+    await generateNewTokens();
   } else {
     let decoded;
     try {
@@ -154,7 +154,7 @@ export const auth = (req: CustomRequest, res: Response, next: NextFunction) => {
       next();
     } catch (error: any) {
       if (error.name === "TokenExpiredError") {
-        generateNewTokens();
+        await generateNewTokens();
       } else {
         return next(
           createError("Access token is invalid.", 400, errorCode.attack)
