@@ -52,7 +52,7 @@ app
   .use(express.json())
   .use(cookieParser())
   .use(cors(corsOptions))
-  .use(helmet())
+  .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
   .use(compression())
   .use(limiter);
 
