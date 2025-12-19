@@ -25,7 +25,7 @@ app.get("/", (req, res) => {
   res.send("HomeNest Backend is running!");
 });
 
-var whitelist = ["http://example1.com", "http://localhost:5173", "https://homenest.maymyatmon.com"];
+var whitelist = ["http://localhost:5173", "https://homenest.maymyatmon.com"];
 var corsOptions = {
   origin: function (
     origin: any,
