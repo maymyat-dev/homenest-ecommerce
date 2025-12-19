@@ -47,11 +47,11 @@ app.post(
   stripeWebhook
 );
 app
+  .use(cors(corsOptions))
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
   .use(express.json())
   .use(cookieParser())
-  .use(cors(corsOptions))
   .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
   .use(compression())
   .use(limiter);
