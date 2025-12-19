@@ -9,7 +9,7 @@ import { PrismaClient } from "../../../generated/prisma";
 
 const prisma = new PrismaClient();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-05-28.basil' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-08-27.basil' });
 
 interface CustomRequest extends Request {
     userId?: number;
