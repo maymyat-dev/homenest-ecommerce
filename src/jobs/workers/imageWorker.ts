@@ -3,7 +3,18 @@ import { redis } from "../../../config/redisClient";
 import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
 import { prisma } from "../../services/prismaClient";
+import dotenv from "dotenv";
+import path from "path";
 
+dotenv.config({
+  path: path.resolve(process.cwd(), ".env"),
+});
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+  api_key: process.env.CLOUDINARY_API_KEY!,
+  api_secret: process.env.CLOUDINARY_API_SECRET!,
+});
 
 const imageWorker = new Worker(
   "imageQueue",
