@@ -1,8 +1,5 @@
 import { Worker } from "bullmq";
 import { redis } from "../../../config/redisClient";
-import dotenv from "dotenv";
-dotenv.config();
-
 
 export const cacheWorker = new Worker(
   "cache-invalidation",

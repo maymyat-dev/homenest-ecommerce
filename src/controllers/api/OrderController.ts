@@ -6,11 +6,10 @@ import { errorCode } from '../../../config/errorCode';
 import { getUserById } from '../../services/authService';
 import { checkUserIfNotExist } from '../../utils/auth';
 import { PrismaClient } from "../../../generated/prisma";
-import { prisma } from "../../lib/prisma"
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-08-27.basil' });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-05-28.basil' });
 
 interface CustomRequest extends Request {
     userId?: number;

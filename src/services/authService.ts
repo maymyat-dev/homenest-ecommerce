@@ -1,7 +1,6 @@
 import { PrismaClient } from "../../generated/prisma";
-import { prisma } from "../lib/prisma"
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
 export const getUserByPhone = async(phone: string) => {
     return prisma.user.findUnique({

@@ -2,7 +2,7 @@ import { PrismaClient, Prisma } from "../generated/prisma";
 import * as bcrypt from 'bcryptjs';
 import { faker } from '@faker-js/faker';
 
-// const prisma = new PrismaClient();
+const prisma = new PrismaClient();
 
 export function createRandomUser() {
     return {

@@ -1,3 +1,4 @@
+import { r } from "@faker-js/faker/dist/airline-BUL6NtOJ";
 import { PrismaClient } from "../../generated/prisma";
 
 export const prisma = new PrismaClient().$extends({

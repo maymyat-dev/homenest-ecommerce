@@ -1,7 +1,6 @@
-// import { PrismaClient } from "../../generated/prisma";
+import { PrismaClient } from "../../generated/prisma";
 
-// const prisma = new PrismaClient();
-import { prisma } from "../lib/prisma"
+const prisma = new PrismaClient();
 
 export const getSettingStatus = async (key: string) => {
   return prisma.setting.findUnique({

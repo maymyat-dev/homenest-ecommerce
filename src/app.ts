@@ -25,16 +25,21 @@ app.get("/", (req, res) => {
   res.send("HomeNest Backend is running!");
 });
 
-var whitelist = ["http://localhost:5173", "https://homenest.maymyatmon.com"];
+var whitelist = ["http://example1.com", "http://localhost:5173", "https://homenest.maymyatmon.com"];
 var corsOptions = {
-  origin: function (origin: any, callback: any) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
+  origin: function (
+    origin: any,
+    callback: (err: Error | null, origin?: any) => void
+  ) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true); // allow requests with no origin (like mobile apps or curl requests)
+    if (whitelist.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  credentials: true,
+  credentials: true, // allow credentials (cookies, authorization headers, etc.) to be sent with requests
 };
 app.post(
   "/api/v1/user/webhook",
@@ -43,11 +48,10 @@ app.post(
 );
 app
   .use(morgan("dev"))
-    .use(cors(corsOptions))
   .use(express.urlencoded({ extended: true }))
   .use(express.json())
   .use(cookieParser())
-
+  .use(cors(corsOptions))
   .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
   .use(compression())
   .use(limiter);
@@ -74,8 +78,13 @@ i18next
 
 app.use(middleware.handle(i18next));
 
+// app.use((req, res, next) => {
+//   res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+//   next();
+// })
+
 app.use(express.static("public"));
-// app.use(express.static("uploads"));
+app.use(express.static("uploads"));
 
 app.use("/api/v1", routes);
 
@@ -86,14 +95,14 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   res.status(status).json({ message, error: errorCode });
 });
 
-// cron.schedule("*/5 * * * *", async () => {
-//   console.log("Running a task every 5 minutes");
-//   const setting = await getSettingStatus("maintenance");
-//   if (setting?.value === "true") {
-//     await createOrUpdateSettingStatus("maintenance", "false");
-//     console.log("Now maintenance mode is off");
-//   }
-// });
+cron.schedule("*/5 * * * *", async () => {
+  console.log("Running a task every 5 minutes");
+  const setting = await getSettingStatus("maintenance");
+  if (setting?.value === "true") {
+    await createOrUpdateSettingStatus("maintenance", "false");
+    console.log("Now maintenance mode is off");
+  }
+});
 
 
 export default app;
