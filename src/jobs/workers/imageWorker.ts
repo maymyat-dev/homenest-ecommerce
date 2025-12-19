@@ -3,6 +3,9 @@ import { redis } from "../../../config/redisClient";
 import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
 import { prisma } from "../../services/prismaClient";
+import dotenv from "dotenv";
+dotenv.config();
+
 
 
 const imageWorker = new Worker(
