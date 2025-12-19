@@ -78,10 +78,10 @@ i18next
 
 app.use(middleware.handle(i18next));
 
-app.use((req, res, next) => {
-  res.setHeader("Cross-Origin-Resource-Policy", "same-site");
-  next();
-})
+// app.use((req, res, next) => {
+//   res.setHeader("Cross-Origin-Resource-Policy", "same-site");
+//   next();
+// })
 
 app.use(express.static("public"));
 app.use(express.static("uploads"));

@@ -5,11 +5,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Category {
   id       Int       @id @default(autoincrement())
-  name     String    @unique @db.VarChar(52)
+  name     String @unique    @db.VarChar(52)
   posts    Post[]
   products Product[]
 }
@@ -35,7 +36,7 @@ model Order {
 model Otp {
   id            Int      @id @default(autoincrement())
   phone         String   @unique @db.VarChar(15)
-  otp           String
+  otp           String   
   rememberToken String
   verifiedToken String?
   count         Int      @default(0) @db.SmallInt
@@ -45,20 +46,20 @@ model Otp {
 }
 
 model Post {
-  id         Int       @id @default(autoincrement())
-  title      String    @db.VarChar(255)
+  id         Int      @id @default(autoincrement())
+  title      String   @db.VarChar(255)
   content    String
   body       String
   image      String
   authorId   Int
   categoryId Int
   typeId     Int
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-  author     User      @relation(fields: [authorId], references: [id])
-  category   Category  @relation(fields: [categoryId], references: [id])
-  type       Type      @relation(fields: [typeId], references: [id])
-  tags       PostTag[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  author     User     @relation(fields: [authorId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+  type       Type     @relation(fields: [typeId], references: [id])
+  tags        PostTag[]
 }
 
 model Product {
@@ -74,7 +75,7 @@ model Product {
   typeId      Int
   createdAt   DateTime           @default(now())
   updatedAt   DateTime           @updatedAt
-  images      Image[]
+  images       Image[]
   category    Category           @relation(fields: [categoryId], references: [id])
   type        Type               @relation(fields: [typeId], references: [id])
   products    ProductsOnOrders[]
@@ -94,16 +95,17 @@ model ProductsOnOrders {
 }
 
 model PostTag {
-  id    Int    @id @default(autoincrement())
-  name  String @unique @db.VarChar(52)
-  posts Post[]
+  id        Int        @id @default(autoincrement())
+  name      String     @unique @db.VarChar(52)
+  posts     Post[]
 }
 
 model ProductTag {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique @db.VarChar(52)
-  products Product[]
+  id        Int        @id @default(autoincrement())
+  name      String     @unique @db.VarChar(52)
+  products  Product[]
 }
+
 
 // model Tag {
 //   id        Int        @id @default(autoincrement())
@@ -121,7 +123,7 @@ model ProductTag {
 
 model Type {
   id       Int       @id @default(autoincrement())
-  name     String    @unique @db.VarChar(52)
+  name     String    @unique@db.VarChar(52)
   posts    Post[]
   products Product[]
 }
@@ -160,7 +162,7 @@ enum Status {
 }
 
 model Setting {
-  id    Int    @id @default(autoincrement())
-  key   String @unique @db.VarChar(52)
-  value String @db.VarChar(200)
+  id        Int     @id @default(autoincrement())
+  key       String  @unique @db.VarChar(52)
+  value     String @db.VarChar(200)
 }
