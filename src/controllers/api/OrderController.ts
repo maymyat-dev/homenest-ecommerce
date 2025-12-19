@@ -5,7 +5,7 @@ import { createError } from '../../utils/error';
 import { errorCode } from '../../../config/errorCode';
 import { getUserById } from '../../services/authService';
 import { checkUserIfNotExist } from '../../utils/auth';
-import { PrismaClient } from "../../../generated/prisma";
+import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
