@@ -2,17 +2,12 @@
   "version": 2,
   "functions": {
     "src/index.ts": {
-      "runtime": "nodejs18.x"
+      "memory": 1024,
+      "maxDuration": 10
     }
   },
   "rewrites": [
-    {
-      "source": "/api/v1/(.*)",
-      "destination": "/src/index.ts"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/src/index.ts"
-    }
+    { "source": "/api/v1/(.*)", "destination": "/src/index.ts" },
+    { "source": "/(.*)", "destination": "/src/index.ts" }
   ]
 }
