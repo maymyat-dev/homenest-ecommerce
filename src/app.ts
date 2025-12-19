@@ -10,48 +10,51 @@ import Backend from "i18next-fs-backend";
 import * as middleware from "i18next-http-middleware";
 import path from "path";
 import routes from "./routes/v1";
-import cron from "node-cron";
-import { createOrUpdateSettingStatus, getSettingStatus } from "./services/settingService";
 import bodyParser from "body-parser";
 import { stripeWebhook } from "./controllers/api/OrderController";
 
 export const app = express();
 
-app.set('trust proxy', 1);
-
+/* ----------------------------- BASIC SETUP ----------------------------- */
+app.set("trust proxy", 1);
 app.set("view engine", "ejs");
 app.set("views", "src/views");
-app.get("/", (req, res) => {
-  res.send("HomeNest Backend is running!");
-});
 
-var whitelist = ["http://localhost:5173", "https://homenest.maymyatmon.com"];
-var corsOptions = {
-  origin: function (origin: any, callback: any) {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
+/* ----------------------------- CORS (MUST BE FIRST) ----------------------------- */
+const corsOptions: cors.CorsOptions = {
+  origin: ["http://localhost:5173", "https://homenest.maymyatmon.com"],
   credentials: true,
 };
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
+
+/* ----------------------------- LOGGING ----------------------------- */
+app.use(morgan("dev"));
+
+/* ----------------------------- STRIPE WEBHOOK ----------------------------- */
+/* Must be BEFORE express.json() */
 app.post(
   "/api/v1/user/webhook",
   bodyParser.raw({ type: "application/json" }),
   stripeWebhook
 );
-app
-  .use(morgan("dev"))
-    .use(cors(corsOptions))
-  .use(express.urlencoded({ extended: true }))
-  .use(express.json())
-  .use(cookieParser())
 
-  .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
-  .use(compression())
-  .use(limiter);
+/* ----------------------------- BODY PARSERS ----------------------------- */
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(cookieParser());
 
+/* ----------------------------- SECURITY & PERFORMANCE ----------------------------- */
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
+app.use(compression());
+app.use(limiter);
+
+/* ----------------------------- I18N ----------------------------- */
 i18next
   .use(Backend)
   .use(middleware.LanguageDetector)
@@ -74,26 +77,27 @@ i18next
 
 app.use(middleware.handle(i18next));
 
+/* ----------------------------- STATIC & ROUTES ----------------------------- */
 app.use(express.static("public"));
-// app.use(express.static("uploads"));
+
+app.get("/", (_req, res) => {
+  res.send("HomeNest Backend is running!");
+});
 
 app.use("/api/v1", routes);
 
-app.use((error: any, req: Request, res: Response, next: NextFunction) => {
-  const status = error.status || 500;
-  const message = error.message || "Server Error";
-  const errorCode = error.errorCode || "Error_Code";
-  res.status(status).json({ message, error: errorCode });
-});
+/* ----------------------------- ERROR HANDLER ----------------------------- */
+app.use(
+  (error: any, _req: Request, res: Response, _next: NextFunction) => {
+    const status = error.status || 500;
+    const message = error.message || "Server Error";
+    const errorCode = error.errorCode || "ERROR_CODE";
 
-// cron.schedule("*/5 * * * *", async () => {
-//   console.log("Running a task every 5 minutes");
-//   const setting = await getSettingStatus("maintenance");
-//   if (setting?.value === "true") {
-//     await createOrUpdateSettingStatus("maintenance", "false");
-//     console.log("Now maintenance mode is off");
-//   }
-// });
-
+    res.status(status).json({
+      message,
+      error: errorCode,
+    });
+  }
+);
 
 export default app;
