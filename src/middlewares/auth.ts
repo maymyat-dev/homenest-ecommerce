@@ -111,23 +111,40 @@ export const auth = async(req: CustomRequest, res: Response, next: NextFunction)
 
     await updateUser(user.id, userData);
 
-    res
-      .cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        // secure: false, // only true in production
-        // sameSite: "strict",
-        maxAge: 60 * 15 * 1000, // 15 minutes
-      })
-      .cookie("refreshToken", newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        // secure: false,
-        // sameSite: "strict",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      });
+    // res
+    //   .cookie("accessToken", newAccessToken, {
+    //     httpOnly: true,
+    //     secure: process.env.NODE_ENV === "production",
+    //     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    //     // secure: false, // only true in production
+    //     // sameSite: "strict",
+    //     maxAge: 60 * 15 * 1000, // 15 minutes
+    //   })
+    //   .cookie("refreshToken", newRefreshToken, {
+    //     httpOnly: true,
+    //     secure: process.env.NODE_ENV === "production",
+    //     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    //     // secure: false,
+    //     // sameSite: "strict",
+    //     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    //   });
+
+    const cookieOptions = {
+  httpOnly: true,
+  secure: true, 
+  sameSite: "lax" as const, 
+  domain: ".maymyatmon.com", 
+};
+
+res.cookie("accessToken", newAccessToken, {
+  ...cookieOptions,
+  maxAge: 60 * 15 * 1000,
+});
+
+res.cookie("refreshToken", newRefreshToken, {
+  ...cookieOptions,
+  maxAge: 30 * 24 * 60 * 60 * 1000,
+});
     req.userId = user.id;
     next();
   };
