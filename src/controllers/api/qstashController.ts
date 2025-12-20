@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { qstashReceiver } from "../../utils/qstash";
+import { qstashReceiver } from "../../utils/qstashClient";
 import { invalidateCache } from "../../jobs/cache/invalidateCache";
 import { processImage } from "../../jobs/image/processImage";
 

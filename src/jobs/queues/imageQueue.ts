@@ -1,5 +1,5 @@
 
-import { qstash } from "../../utils/qstash";
+import { qstash } from "../../utils/qstashClient";
 
 export async function enqueueImageJob(data: any) {
   return await qstash.publishJSON({

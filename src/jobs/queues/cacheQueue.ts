@@ -1,4 +1,4 @@
-import { qstash } from "../../utils/qstash";
+import { qstash } from "../../utils/qstashClient";
 
 export async function enqueueCacheInvalidation(data: any) {
   console.log("Attempting to publish to QStash...", data); 

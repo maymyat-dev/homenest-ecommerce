@@ -1,4 +1,4 @@
-// src/v1/qstash.ts
+
 import express from "express";
 import { invalidateCacheHandler, processImageHandler } from "../../controllers/api/qstashController";
 
