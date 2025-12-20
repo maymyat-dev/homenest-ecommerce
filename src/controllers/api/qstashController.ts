@@ -23,15 +23,10 @@ export const invalidateCacheHandler: RequestHandler = async (req, res) => {
 };
 
 export const processImageHandler: RequestHandler = async (req, res) => {
-  console.log("processImageHandler", req.headers);
-  await sendTelegramMessage("Headers: " + JSON.stringify(req.headers));
   const signature = req.headers["upstash-signature"] as string;
 
-  console.log(
-    "processImageHandler",
-    req.body, // Buffer (this is GOOD)
-    signature,
-    req.originalUrl
+  await sendTelegramMessage(
+    `signature: ${signature}, body: ${JSON.stringify(req.body)}`
   );
 
   if (!signature) {
@@ -40,10 +35,14 @@ export const processImageHandler: RequestHandler = async (req, res) => {
     return;
   }
 
+  const fullUrl = `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+
+  await sendTelegramMessage(`fullUrl: ${fullUrl}`);
+
   const isValid = await qstashReceiver.verify({
     signature,
-    body: req.body, // 🔥 RAW BODY
-    url: req.originalUrl, // must match exactly
+    body: req.body, // raw buffer
+    url: fullUrl, // 🔥 FULL URL
   });
 
   await sendTelegramMessage(`isValid: ${isValid}`);
@@ -56,7 +55,8 @@ export const processImageHandler: RequestHandler = async (req, res) => {
 
   try {
     await sendTelegramMessage(`Processing image: ${JSON.stringify(req.body)}`);
-    await processImage(req.body);
+    const payload = JSON.parse(req.body.toString());
+    await processImage(payload);
     res.status(200).json({ ok: true });
     return;
   } catch (err) {
