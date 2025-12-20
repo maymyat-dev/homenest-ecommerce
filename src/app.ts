@@ -11,14 +11,17 @@ import * as middleware from "i18next-http-middleware";
 import path from "path";
 import routes from "./routes/v1";
 import cron from "node-cron";
-import { createOrUpdateSettingStatus, getSettingStatus } from "./services/settingService";
+import {
+  createOrUpdateSettingStatus,
+  getSettingStatus,
+} from "./services/settingService";
 import bodyParser from "body-parser";
 import { stripeWebhook } from "./controllers/api/OrderController";
 import qstashRoutes from "./routes/v1/qstash";
 
 export const app = express();
 
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 app.set("view engine", "ejs");
 app.set("views", "src/views");
@@ -26,7 +29,11 @@ app.get("/", (req, res) => {
   res.send("HomeNest Backend is running!");
 });
 
-var whitelist = ["http://example1.com", "http://localhost:5173", "https://homenest.maymyatmon.com"];
+var whitelist = [
+  "http://example1.com",
+  "http://localhost:5173",
+  "https://homenest.maymyatmon.com",
+];
 var corsOptions = {
   origin: function (
     origin: any,
@@ -48,17 +55,20 @@ app.post(
   stripeWebhook
 );
 app
-  .use("/api/v1/qstash", express.raw({ type: "application/json" }), qstashRoutes)
   .use(cors(corsOptions))
+  .use(
+    "/api/v1/qstash",
+    express.raw({ type: "application/json" }),
+    qstashRoutes
+  )
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
-  
+
   .use(express.json())
   .use(cookieParser())
   .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
   .use(compression())
-  .use(limiter)
-  
+  .use(limiter);
 
 i18next
   .use(Backend)
@@ -107,6 +117,5 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
 //     console.log("Now maintenance mode is off");
 //   }
 // });
-
 
 export default app;
