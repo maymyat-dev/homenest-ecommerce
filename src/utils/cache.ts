@@ -9,7 +9,12 @@ export const getOrSetCache = async <T>(
 
     if (cachedData) {
       console.log("Cache hit");
-      return JSON.parse(cachedData) as T;
+      try {
+        return JSON.parse(cachedData) as T;
+      } catch {
+        // ❗ corrupted cache
+        await redis.del(key);
+      }
     }
 
     console.log("Cache miss");
@@ -19,6 +24,7 @@ export const getOrSetCache = async <T>(
     return freshData;
   } catch (error) {
     console.error("Redis error:", error);
-    throw error;
+    return cb(); // ❗ Redis fail ≠ API fail
   }
 };
+

@@ -35,16 +35,16 @@ export const processImageHandler: RequestHandler = async (req, res) => {
 
   try {
     await processImage(req.body);
-  } catch (error) {
-    console.error("processImage failed ❌", error);
-
-  
-    res.status(200).json({ ok: false });
+    res.status(200).json({ ok: true });
+    return;
+  } catch (err) {
+    console.error("processImage failed:", err);
+    res.status(200).json({ ok: false }); 
     return;
   }
-
-  res.status(200).json({ ok: true });
 };
+
+
 
 
 
