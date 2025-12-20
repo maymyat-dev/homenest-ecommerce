@@ -54,12 +54,9 @@ app.post(
   bodyParser.raw({ type: "application/json" }),
   stripeWebhook
 );
+app.use("/api/v1/qstash", express.raw({ type: "*/*" }), qstashRoutes);
+
 app
-  .use(
-    "/api/v1/qstash",
-    express.raw({ type: "application/json" }),
-    qstashRoutes
-  )
   .use(cors(corsOptions))
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
