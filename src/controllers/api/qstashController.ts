@@ -23,10 +23,25 @@ export const invalidateCacheHandler: RequestHandler = async (req, res) => {
 };
 
 export const processImageHandler: RequestHandler = async (req, res) => {
+  const signature = req.headers["upstash-signature"] as string;
+
+  console.log(
+    "processImageHandler",
+    req.body, // Buffer (this is GOOD)
+    signature,
+    req.originalUrl
+  );
+
+  if (!signature) {
+    await sendTelegramMessage("Missing QStash signature");
+    res.status(401).json({ error: "Missing QStash signature" });
+    return;
+  }
+
   const isValid = await qstashReceiver.verify({
-    signature: req.headers["upstash-signature"] as string,
-    body: JSON.stringify(req.body),
-    url: req.originalUrl,
+    signature,
+    body: req.body, // 🔥 RAW BODY
+    url: req.originalUrl, // must match exactly
   });
 
   if (!isValid) {
