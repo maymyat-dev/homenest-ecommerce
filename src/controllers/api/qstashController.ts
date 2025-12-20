@@ -2,8 +2,6 @@ import { RequestHandler } from "express";
 import { qstashReceiver } from "../../utils/qstashClient";
 import { invalidateCache } from "../../jobs/cache/invalidateCache";
 import { processImage } from "../../jobs/image/processImage";
-import { v2 as cloudinary } from "cloudinary";
-import { prisma } from "../../services/prismaClient";
 
 export const invalidateCacheHandler: RequestHandler = async (req, res) => {
   const isValid = await qstashReceiver.verify({
@@ -39,6 +37,8 @@ export const processImageHandler: RequestHandler = async (req, res) => {
 
   res.json({ ok: true });
 };
+
+
 
 
 
