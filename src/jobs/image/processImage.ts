@@ -8,51 +8,45 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
-export async function processImage(data: {
-  imageId: string;
-  imageUrl: string;
-}) {
+export async function processImage(data: any) {
   try {
-    const { imageId, imageUrl } = data;
+    console.log("Processing image:", data);
+    const { filePath, imageId, postId, width, height, quality = 80 } = data;
 
-    if (!imageUrl) {
-      throw new Error("imageUrl missing");
+    if (!filePath) throw new Error("filePath missing");
+
+    const optimizedBuffer = await sharp(filePath)
+        .resize(width || undefined, height || undefined)
+        .webp({ quality })
+        .toBuffer();
+    
+     const uploadResult: any = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream(
+          { folder: "homenest_uploads" },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        ).end(optimizedBuffer);
+      });
+
+      const cloudinaryUrl = uploadResult.secure_url;
+      if (!cloudinaryUrl) throw new Error("Cloudinary URL missing");
+
+      if (postId) {
+        await prisma.post.update({
+          where: { id: Number(postId) },
+          data: { image: cloudinaryUrl },
+        });
+      } else if (imageId) {
+        await prisma.image.update({
+          where: { id: Number(imageId) },
+          data: { path: cloudinaryUrl },
+        });
     }
-
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error("Failed to fetch image");
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
-
-    const optimizedBuffer = await sharp(buffer)
-      .webp({ quality: 80 })
-      .toBuffer();
-
-    const uploadResult: any = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload_stream(
-        { folder: "homenest_uploads" },
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
-        }
-      ).end(optimizedBuffer);
-    });
-
-    if (!uploadResult?.secure_url) {
-      throw new Error("Cloudinary upload failed");
-    }
-
-    await prisma.image.update({
-      where: { id: Number(imageId) },
-      data: { path: uploadResult.secure_url },
-    });
-
-    return true;
   } catch (err) {
     console.error("processImage error:", err);
-    return false; // ❗ throw မလုပ်
+    return false; 
   }
 }
 
