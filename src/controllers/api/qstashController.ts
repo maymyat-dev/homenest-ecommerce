@@ -25,9 +25,7 @@ export const invalidateCacheHandler: RequestHandler = async (req, res) => {
 export const processImageHandler: RequestHandler = async (req, res) => {
   const signature = req.headers["upstash-signature"] as string;
 
-  await sendTelegramMessage(
-    `signature: ${signature}, body: ${JSON.stringify(req.body)}`
-  );
+  await sendTelegramMessage(`signature: ${signature}, body: ${req.body}`);
 
   if (!signature) {
     await sendTelegramMessage("Missing QStash signature");

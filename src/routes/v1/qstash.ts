@@ -4,6 +4,12 @@ import {
   processImageHandler,
 } from "../../controllers/api/qstashController";
 
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
 const router = express.Router();
 
 router.post("/cache/invalidate", invalidateCacheHandler);

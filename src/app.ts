@@ -55,12 +55,12 @@ app.post(
   stripeWebhook
 );
 app
-  .use(cors(corsOptions))
   .use(
     "/api/v1/qstash",
     express.raw({ type: "application/json" }),
     qstashRoutes
   )
+  .use(cors(corsOptions))
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
 
