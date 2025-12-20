@@ -7,7 +7,7 @@ import { checkUploadFile } from "../../utils/check";
 import { unlink } from "node:fs/promises";
 import path from "path";
 import sharp from "sharp";
-import ImageQueue from "../../jobs/queues/imageQueue";
+import { enqueueImageJob } from "../../jobs/queues/imageQueue";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -95,21 +95,13 @@ export const uploadProfileOptimize = async (
 
   const splitFileName = req.file.filename.split(".")[0];
 
-  const job = await ImageQueue.add(
-    "optimize-image",
+  const job = await enqueueImageJob(
     {
       filePath: req.file.path,
       fileName: `${splitFileName}.webp`,
       width: 200,
       height: 200,
       quality: 50,
-    },
-    {
-      attempts: 3,
-      backoff: {
-        type: "exponential",
-        delay: 1000,
-      },
     }
   );
 
@@ -161,7 +153,7 @@ export const uploadProfileOptimize = async (
   res.status(200).json({
     message: "Profile image uploaded and optimized successfully",
     image: splitFileName + ".webp",
-    jobId: job.id,
+    jobId: job.messageId,
   });
 };
 

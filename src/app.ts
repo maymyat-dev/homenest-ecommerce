@@ -14,6 +14,7 @@ import cron from "node-cron";
 import { createOrUpdateSettingStatus, getSettingStatus } from "./services/settingService";
 import bodyParser from "body-parser";
 import { stripeWebhook } from "./controllers/api/OrderController";
+import qstashRoutes from "./routes/v1/qstash";
 
 export const app = express();
 
@@ -50,11 +51,13 @@ app
   .use(cors(corsOptions))
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
+  .use("/api/v1/qstash", express.raw({ type: "application/json" }), qstashRoutes)
   .use(express.json())
   .use(cookieParser())
   .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
   .use(compression())
-  .use(limiter);
+  .use(limiter)
+  
 
 i18next
   .use(Backend)
@@ -95,14 +98,14 @@ app.use((error: any, req: Request, res: Response, next: NextFunction) => {
   res.status(status).json({ message, error: errorCode });
 });
 
-cron.schedule("*/5 * * * *", async () => {
-  console.log("Running a task every 5 minutes");
-  const setting = await getSettingStatus("maintenance");
-  if (setting?.value === "true") {
-    await createOrUpdateSettingStatus("maintenance", "false");
-    console.log("Now maintenance mode is off");
-  }
-});
+// cron.schedule("*/5 * * * *", async () => {
+//   console.log("Running a task every 5 minutes");
+//   const setting = await getSettingStatus("maintenance");
+//   if (setting?.value === "true") {
+//     await createOrUpdateSettingStatus("maintenance", "false");
+//     console.log("Now maintenance mode is off");
+//   }
+// });
 
 
 export default app;

@@ -1,0 +1,11 @@
+// src/v1/qstash.ts
+import express from "express";
+import { invalidateCacheHandler, processImageHandler } from "../../controllers/api/qstashController";
+
+const router = express.Router();
+
+
+router.post("/cache/invalidate", invalidateCacheHandler);
+router.post("/image/process", processImageHandler);
+
+export default router;

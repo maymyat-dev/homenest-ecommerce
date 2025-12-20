@@ -3,10 +3,7 @@ import { body, query, validationResult } from "express-validator";
 import sanitizeHtml from "sanitize-html";
 import { errorCode } from "../../../config/errorCode";
 import { createError } from "../../utils/error";
-import { getUserById } from "../../services/authService";
-import { checkUserIfNotExist } from "../../utils/auth";
 import { checkModelIfExist, checkUploadFile } from "../../utils/check";
-import ImageQueue from "../../jobs/queues/imageQueue";
 import {
   createOnePost,
   deleteOnePost,
@@ -16,8 +13,8 @@ import {
 } from "../../services/postService";
 import path from "path";
 import { unlink } from "fs/promises";
-import { cache } from "sharp";
-import cacheQueue from "../../jobs/queues/cacheQueue";
+import { enqueueImageJob } from "../../jobs/queues/imageQueue";
+import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -98,8 +95,7 @@ export const createPost = [
 
     const splitFileName = req.file?.filename.split(".")[0];
 
-    await ImageQueue.add(
-      "optimize-image",
+    await enqueueImageJob(
       {
         filePath: req.file?.path,
         fileName: `${splitFileName}.webp`,
@@ -107,21 +103,12 @@ export const createPost = [
         width: 835,
         height: 577,
         quality: 100,
-      },
-      {
-        attempts: 3,
-        backoff: { type: "exponential", delay: 1000 },
       }
     );
 
-    await cacheQueue.add(
-      "invalidate-post-cache",
+    await enqueueCacheInvalidation(
       {
         pattern: "posts:*",
-      },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
       }
     );
 
@@ -200,8 +187,7 @@ export const updatePost = [
 
       const splitFileName = req.file.filename.split(".")[0];
 
-      await ImageQueue.add(
-        "optimize-image",
+      await enqueueImageJob(
         {
           filePath: req.file.path,
           fileName: `${splitFileName}.webp`,
@@ -209,13 +195,6 @@ export const updatePost = [
           width: 835,
           height: 577,
           quality: 100,
-        },
-        {
-          attempts: 3,
-          backoff: {
-            type: "exponential",
-            delay: 1000,
-          },
         }
       );
       const optimizedFile = post.image.split(".")[0] + ".webp";
@@ -223,14 +202,9 @@ export const updatePost = [
       await updateOnePost(postUpdated.id, { image: req.file.filename } as any);
     }
 
-    await cacheQueue.add(
-      "invalidate-post-cache",
+    await enqueueCacheInvalidation(
       {
         pattern: "posts:*",
-      },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
       }
     );
 
@@ -270,14 +244,9 @@ export const deletePost = [
     console.log("optimizedFile: ", optimizedFile);
     await removeFiles(post!.image, optimizedFile);
 
-    await cacheQueue.add(
-      "invalidate-post-cache",
+    await enqueueCacheInvalidation(
       {
         pattern: "posts:*",
-      },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
       }
     );
 

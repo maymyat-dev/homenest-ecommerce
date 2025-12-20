@@ -23,7 +23,8 @@ import {
   removeProductFavorite,
 } from "../../services/userService";
 import { cache } from "sharp";
-import cacheQueue from "../../jobs/queues/cacheQueue";
+
+import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -250,13 +251,8 @@ export const toggleFavorite = [
       await removeProductFavorite(userId!, productId);
     }
 
-    await cacheQueue.add(
-      "invalidate-product-cache",
-      { pattern: "products:*" },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
-      }
+    await enqueueCacheInvalidation(
+      "invalidate-product-cache"
     );
 
     res.status(200).json({

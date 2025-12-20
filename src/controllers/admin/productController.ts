@@ -3,11 +3,11 @@ import { body, validationResult } from "express-validator";
 import { errorCode } from "../../../config/errorCode";
 import { createError } from "../../utils/error";
 import { checkModelIfExist, checkUploadFile } from "../../utils/check";
-import ImageQueue from "../../jobs/queues/imageQueue";
 import { createOneProduct, deleteOneProduct, getProductById, updateOneProduct } from "../../services/productService";
 import path from "path";
 import { unlink } from "fs/promises";
-import cacheQueue from "../../jobs/queues/cacheQueue";
+import { enqueueImageJob } from "../../jobs/queues/imageQueue";
+import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -114,20 +114,15 @@ export const createProduct = [
     
     const dbImage = product.images[index]; 
 
-    return ImageQueue.add(
-      "optimize-image",
+    return enqueueImageJob(
       {
         filePath: file.path,
         fileName: `${splitFileName}.webp`,
-        imageId: dbImage.id, // အခု ID ပါသွားပါပြီ
+        imageId: dbImage.id,
         productId: product.id,
         width: 835,
         height: 577,
         quality: 100,
-      },
-      {
-        attempts: 3,
-        backoff: { type: "exponential", delay: 1000 },
       }
     );
   })
@@ -215,21 +210,14 @@ export const updateProduct = [
       await Promise.all(
         req.files.map(async (file: any) => {
           const splitFileName = file.filename.split(".")[0];
-          return ImageQueue.add(
-            "optimize-image",
+          return enqueueImageJob(
+           
             {
               filePath: file.path,
               fileName: `${splitFileName}.webp`,
               width: 835,
               height: 577,
               quality: 100,
-            },
-            {
-              attempts: 3,
-              backoff: {
-                type: "exponential",
-                delay: 1000,
-              },
             }
           );
         })
@@ -252,8 +240,7 @@ export const updateProduct = [
       const dbImage = productUpdated.images.find(img => img.path === file.filename);
 
       if (dbImage) {
-        return ImageQueue.add(
-          "optimize-image",
+        return enqueueImageJob(
           {
             filePath: file.path,
             fileName: `${splitFileName}.webp`,
@@ -262,10 +249,6 @@ export const updateProduct = [
             width: 835,
             height: 577,
             quality: 100,
-          },
-          {
-            attempts: 3,
-            backoff: { type: "exponential", delay: 1000 },
           }
         );
       }
@@ -300,14 +283,9 @@ export const deleteProduct = [
     );
     await removeFiles(orgFiles, optFiles);
 
-    await cacheQueue.add(
-      "invalidate-product-cache",
+    await enqueueCacheInvalidation(
       {
         pattern: "products:*",
-      },
-      {
-        jobId: `invalidate-${Date.now()}`,
-        priority: 1,
       }
     );
 

@@ -1,5 +1,9 @@
-import { Queue } from "bullmq";
-import { redis } from "../../../config/redisClient";
 
-const ImageQueue = new Queue("imageQueue", { connection: redis });
-export default ImageQueue;
+import { qstash } from "../../utils/qstash";
+
+export async function enqueueImageJob(data: any) {
+  return await qstash.publishJSON({
+    url: "https://homenest.backend.maymyatmon.com/api/v1/images/process",
+    body: data,
+  });
+}
