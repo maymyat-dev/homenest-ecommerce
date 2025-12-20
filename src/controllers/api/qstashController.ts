@@ -46,6 +46,8 @@ export const processImageHandler: RequestHandler = async (req, res) => {
     url: req.originalUrl, // must match exactly
   });
 
+  await sendTelegramMessage(`isValid: ${isValid}`);
+
   if (!isValid) {
     await sendTelegramMessage("Invalid QStash signature");
     res.status(401).json({ error: "Invalid QStash signature" });
@@ -53,6 +55,7 @@ export const processImageHandler: RequestHandler = async (req, res) => {
   }
 
   try {
+    await sendTelegramMessage(`Processing image: ${JSON.stringify(req.body)}`);
     await processImage(req.body);
     res.status(200).json({ ok: true });
     return;
