@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { qstashReceiver } from "../../utils/qstashClient";
 import { invalidateCache } from "../../jobs/cache/invalidateCache";
 import { processImage } from "../../jobs/image/processImage";
+import { sendTelegramMessage } from "../../utils/telegram";
 
 export const invalidateCacheHandler: RequestHandler = async (req, res) => {
   const isValid = await qstashReceiver.verify({
@@ -29,6 +30,7 @@ export const processImageHandler: RequestHandler = async (req, res) => {
   });
 
   if (!isValid) {
+    await sendTelegramMessage("Invalid QStash signature");
     res.status(401).json({ error: "Invalid QStash signature" });
     return;
   }
@@ -38,17 +40,9 @@ export const processImageHandler: RequestHandler = async (req, res) => {
     res.status(200).json({ ok: true });
     return;
   } catch (err) {
+    await sendTelegramMessage(`processImage failed: ${err}`);
     console.error("processImage failed:", err);
-    res.status(200).json({ ok: false }); 
+    res.status(200).json({ ok: false });
     return;
   }
 };
-
-
-
-
-
-
-
-
-
