@@ -1,18 +1,24 @@
 import { redis } from "../../config/redisClient";
 
-export const getOrSetCache = async (key: any, cb: any) => {
+export const getOrSetCache = async <T>(
+  key: string,
+  cb: () => Promise<T>
+): Promise<T> => {
   try {
-    const cachedData = await redis.get(key);
+    const cachedData = await redis.get<string>(key);
+
     if (cachedData) {
       console.log("Cache hit");
-      return null;
+      return JSON.parse(cachedData) as T;
     }
+
     console.log("Cache miss");
     const freshData = await cb();
-    await redis.setex(key, 3600, JSON.stringify(freshData)); // Cache for 1 hour
+
+    await redis.setex(key, 3600, JSON.stringify(freshData));
     return freshData;
   } catch (error) {
-    console.error("Redis error: ", error);
+    console.error("Redis error:", error);
     throw error;
   }
 };
