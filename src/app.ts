@@ -48,10 +48,11 @@ app.post(
   stripeWebhook
 );
 app
+  .use("/api/v1/qstash", express.raw({ type: "application/json" }), qstashRoutes)
   .use(cors(corsOptions))
   .use(morgan("dev"))
   .use(express.urlencoded({ extended: true }))
-  .use("/api/v1/qstash", express.raw({ type: "application/json" }), qstashRoutes)
+  
   .use(express.json())
   .use(cookieParser())
   .use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }))
