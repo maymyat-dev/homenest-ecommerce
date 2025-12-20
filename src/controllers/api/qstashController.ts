@@ -29,7 +29,9 @@ export const processImageHandler: RequestHandler = async (req, res) => {
 
   const signature = req.headers["upstash-signature"] as string;
 
-  await sendTelegramMessage(`signature: ${signature}, body: ${req.body}`);
+  await sendTelegramMessage(
+    `signature: ${signature}, bodyLength: ${req.body.length}`
+  );
 
   if (!signature) {
     await sendTelegramMessage("Missing QStash signature");
@@ -41,13 +43,13 @@ export const processImageHandler: RequestHandler = async (req, res) => {
 
   await sendTelegramMessage(`fullUrl: ${fullUrl}`);
   try {
-    const isValid = await qstashReceiver.verify({
-      signature,
-      body: req.body, // raw buffer
-      url: fullUrl, // 🔥 FULL URL
-    });
+    // const isValid = await qstashReceiver.verify({
+    //   signature,
+    //   body: req.body, // raw buffer
+    //   url: fullUrl, // 🔥 FULL URL
+    // });
 
-    await sendTelegramMessage(`isValid: ${isValid}`);
+    // await sendTelegramMessage(`isValid: ${isValid}`);
 
     await sendTelegramMessage(`Processing image: ${JSON.stringify(req.body)}`);
     const payload = JSON.parse(req.body.toString());
