@@ -23,6 +23,8 @@ export const invalidateCacheHandler: RequestHandler = async (req, res) => {
 };
 
 export const processImageHandler: RequestHandler = async (req, res) => {
+  console.log("processImageHandler", req.headers);
+  await sendTelegramMessage("Headers: " + JSON.stringify(req.headers));
   const signature = req.headers["upstash-signature"] as string;
 
   console.log(
