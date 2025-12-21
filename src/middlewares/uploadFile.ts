@@ -17,7 +17,8 @@ const fileStorage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const ext = file.mimetype.split("/")[1];
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)+ "." + ext;
+    const uniqueSuffix =
+      Date.now() + "-" + Math.round(Math.random() * 1e9) + "." + ext;
     cb(null, uniqueSuffix);
   },
 });
@@ -30,7 +31,7 @@ const fileFilter = (
   if (
     file.mimetype === "image/jpeg" ||
     file.mimetype === "image/png" ||
-    file.mimetype === "image/jpg" 
+    file.mimetype === "image/jpg"
   ) {
     cb(null, true);
   } else {
@@ -48,6 +49,6 @@ export const uploadMemory = multer({
   storage: multer.memoryStorage(),
   fileFilter: fileFilter,
   limits: { fileSize: 1024 * 1024 * 10 }, //Maximum file size 10MB, so image optimizing is needed
-})
+});
 
 export default upload;

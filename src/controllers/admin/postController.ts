@@ -15,6 +15,7 @@ import path from "path";
 import { unlink } from "fs/promises";
 import { enqueueImageJob } from "../../jobs/queues/imageQueue";
 import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
+import { processImage } from "../../jobs/image/processImage";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -95,22 +96,18 @@ export const createPost = [
 
     const splitFileName = req.file?.filename.split(".")[0];
 
-    await enqueueImageJob(
-      {
-        filePath: req.file?.path,
-        fileName: `${splitFileName}.webp`,
-        postId: post.id,
-        width: 835,
-        height: 577,
-        quality: 100,
-      }
-    );
+    await processImage({
+      filePath: req.file?.path,
+      fileName: `${splitFileName}.webp`,
+      postId: post.id,
+      width: 835,
+      height: 577,
+      quality: 100,
+    });
 
-    await enqueueCacheInvalidation(
-      {
-        pattern: "posts:*",
-      }
-    );
+    await enqueueCacheInvalidation({
+      pattern: "posts:*",
+    });
 
     res
       .status(201)
@@ -181,32 +178,28 @@ export const updatePost = [
       type,
       tags,
     };
- const postUpdated = await updateOnePost(post.id, data);
+    const postUpdated = await updateOnePost(post.id, data);
     if (req.file) {
       data.image = req.file.filename;
 
       const splitFileName = req.file.filename.split(".")[0];
 
-      await enqueueImageJob(
-        {
-          filePath: req.file.path,
-          fileName: `${splitFileName}.webp`,
-          postId: postUpdated.id,
-          width: 835,
-          height: 577,
-          quality: 100,
-        }
-      );
+      await processImage({
+        filePath: req.file.path,
+        fileName: `${splitFileName}.webp`,
+        postId: postUpdated.id,
+        width: 835,
+        height: 577,
+        quality: 100,
+      });
       const optimizedFile = post.image.split(".")[0] + ".webp";
       await removeFiles(post.image, optimizedFile);
       await updateOnePost(postUpdated.id, { image: req.file.filename } as any);
     }
 
-    await enqueueCacheInvalidation(
-      {
-        pattern: "posts:*",
-      }
-    );
+    await enqueueCacheInvalidation({
+      pattern: "posts:*",
+    });
 
     res
       .status(200)
@@ -244,11 +237,9 @@ export const deletePost = [
     console.log("optimizedFile: ", optimizedFile);
     await removeFiles(post!.image, optimizedFile);
 
-    await enqueueCacheInvalidation(
-      {
-        pattern: "posts:*",
-      }
-    );
+    await enqueueCacheInvalidation({
+      pattern: "posts:*",
+    });
 
     res
       .status(200)
