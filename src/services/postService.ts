@@ -4,7 +4,7 @@ export type PostArgs = {
   title: string;
   content: string;
   body: string;
-  image: string;
+  image?: string;
   authorId: number;
   category: string;
   type: string;
@@ -63,7 +63,7 @@ export const createOnePost = async (postData: PostArgs) => {
       tags: true,
       category: true,
       type: true,
-    }
+    },
   });
 };
 export const updateOnePost = async (postId: number, postData: PostArgs) => {
@@ -116,20 +116,18 @@ export const updateOnePost = async (postId: number, postData: PostArgs) => {
   });
 };
 
-export const getPostById = async(id: number)=> {
+export const getPostById = async (id: number) => {
   return prisma.post.findUnique({
     where: {
-      id
-    }
-  })
-}
-
-
+      id,
+    },
+  });
+};
 
 export const deleteOnePost = async (id: number) => {
   return prisma.post.delete({
     where: {
-      id
+      id,
     },
   });
 };
@@ -137,7 +135,7 @@ export const deleteOnePost = async (id: number) => {
 export const getPostWithRelations = async (id: number) => {
   return prisma.post.findUnique({
     where: {
-      id
+      id,
     },
     select: {
       id: true,
@@ -166,11 +164,10 @@ export const getPostWithRelations = async (id: number) => {
           name: true,
         },
       },
-    }
+    },
   });
 };
 
 export const getPostsList = async (options: any) => {
-  return prisma.post.findMany(options)
-}
-
+  return prisma.post.findMany(options);
+};

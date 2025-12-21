@@ -4,6 +4,7 @@ import sanitizeHtml from "sanitize-html";
 import { errorCode } from "../../../config/errorCode";
 import { createError } from "../../utils/error";
 import { checkModelIfExist, checkUploadFile } from "../../utils/check";
+import { randomUUID } from "crypto";
 import {
   createOnePost,
   deleteOnePost,
@@ -15,7 +16,10 @@ import path from "path";
 import { unlink } from "fs/promises";
 import { enqueueImageJob } from "../../jobs/queues/imageQueue";
 import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
-import { processImage } from "../../jobs/image/processImage";
+import {
+  directUploadCloudinary,
+  processImage,
+} from "../../jobs/image/processImage";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -81,29 +85,31 @@ export const createPost = [
     const user = req.user;
 
     checkUploadFile(req.file);
+    console.log(req.file);
+    let imageUrl = "";
+    if (req.file) {
+      const fileId = randomUUID();
+      imageUrl = await directUploadCloudinary({
+        buffer: req.file.buffer, // ✅ buffer
+        fileName: `${fileId}.webp`,
+        width: 835,
+        height: 577,
+        quality: 100,
+      });
+    }
 
     const data: PostArgs = {
       title,
       content,
       body,
-      image: req.file!.filename,
+      image: imageUrl,
       authorId: user!.id,
       category,
       type,
       tags,
     };
+
     const post = await createOnePost(data);
-
-    const splitFileName = req.file?.filename.split(".")[0];
-
-    await processImage({
-      filePath: req.file?.path,
-      fileName: `${splitFileName}.webp`,
-      postId: post.id,
-      width: 835,
-      height: 577,
-      quality: 100,
-    });
 
     await enqueueCacheInvalidation({
       pattern: "posts:*",
