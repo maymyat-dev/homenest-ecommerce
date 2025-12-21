@@ -7,25 +7,33 @@ export const prisma = new PrismaClient().$extends({
         needs: { firstName: true, lastName: true },
         compute(user) {
           return `${user.firstName} ${user.lastName}`;
-        }
+        },
       },
       image: {
         needs: { image: true },
         compute(user) {
-          if(user.image) {
-            return "/optimize/" + user.image.split(".")[0] + ".webp";
-          }
-          return user.image;
-          
-        }
-      }
+          if (!user.image) return user.image;
+
+      
+          const fileName = user.image.split(".")[0];
+          return `/optimize/${fileName}.webp`;
+        },
+      },
     },
     post: {
       image: {
         needs: { image: true },
         compute(post) {
-          return "/optimize/" + post.image.split(".")[0] + ".webp";
-        }
+          if (!post.image) return post.image;
+
+      
+          if (post.image.includes("res.cloudinary.com")) {
+            return post.image.replace("/upload/", "/upload/q_auto,f_auto/");
+          }
+
+        
+          return "/optimize/" + post.image;
+        },
       },
       updatedAt: {
         needs: { updatedAt: true },
@@ -35,17 +43,21 @@ export const prisma = new PrismaClient().$extends({
             month: "long",
             day: "numeric",
           });
-        }
-      }
+        },
+      },
     },
     image: {
       path: {
         needs: { path: true },
         compute(image) {
-          return "/optimize/" + image.path.split(".")[0] + ".webp";
-          
-        }
-      }
-    }
-  }
-})
+          if (!image.path) return image.path;
+         
+          if (image.path.includes("res.cloudinary.com")) {
+            return image.path.replace("/upload/", "/upload/q_auto,f_auto/");
+          }
+          return "/optimize/" + image.path;
+        },
+      },
+    },
+  },
+});
