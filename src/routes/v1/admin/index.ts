@@ -20,12 +20,12 @@ router.post("/maintenance", setMaintenance);
 
 //CRUD for posts
 router.post("/posts", uploadMemory.single("image"), createPost);
-router.patch("/posts", upload.single("image"), updatePost);
+router.patch("/posts", uploadMemory.single("image"), updatePost);
 router.delete("/posts", deletePost);
 
 //CRUD for Products
-router.post("/products", upload.array("images", 4), createProduct);
-router.patch("/products", upload.array("images", 4), updateProduct);
+router.post("/products", uploadMemory.array("images", 4), createProduct);
+router.patch("/products", uploadMemory.array("images", 4), updateProduct);
 router.delete("/products", deleteProduct);
 
 export default router;

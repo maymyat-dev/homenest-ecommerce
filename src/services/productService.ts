@@ -7,7 +7,7 @@ export const createOneProduct = async (data: any) => {
     price: data.price,
     discount: data.discount,
     inventory: +data.inventory,
-    
+
     category: {
       connectOrCreate: {
         where: {
@@ -29,8 +29,8 @@ export const createOneProduct = async (data: any) => {
       },
     },
     images: {
-        create: data.images
-    }
+      create: data.images.map((url: string) => ({ path: url })),
+    },
   };
 
   if (data.tags && data.tags.length > 0) {
@@ -49,21 +49,21 @@ export const createOneProduct = async (data: any) => {
   return prisma.product.create({
     data: productData,
     include: {
-      images: true
-    }
+      images: true,
+    },
   });
 };
 
-export const getProductById = async(id: number)=> {
+export const getProductById = async (id: number) => {
   return prisma.product.findUnique({
     where: {
-      id
+      id,
     },
     include: {
       images: true,
-    }
-  })
-}
+    },
+  });
+};
 
 export const updateOneProduct = async (productId: number, data: any) => {
   const productData: any = {
@@ -88,7 +88,6 @@ export const updateOneProduct = async (productId: number, data: any) => {
         },
       },
     },
-    
   };
   if (data.tags && data.tags.length > 0) {
     productData.tags = {
@@ -101,29 +100,28 @@ export const updateOneProduct = async (productId: number, data: any) => {
       })),
     };
   }
-  if ( data.images && data.images.length > 0) {
+  if (data.images && data.images.length > 0) {
     productData.images = {
       deleteMany: {},
-      create: data.images,
+      create: data.images.map((url: string) => ({ path: url })),
     };
-    
   }
   return prisma.product.update({
     where: { id: productId },
     data: productData,
     include: {
-      images: true, 
+      images: true,
       category: true,
       type: true,
       tags: true,
-    }
+    },
   });
-}
+};
 
 export const deleteOneProduct = async (id: number) => {
   return prisma.product.delete({
     where: {
-      id
+      id,
     },
   });
 };
@@ -138,7 +136,6 @@ export const getProductWithRelations = async (id: number, userId: number) => {
       typeId: true,
       createdAt: true,
       updatedAt: true,
-      
     },
     include: {
       images: {
@@ -156,7 +153,7 @@ export const getProductWithRelations = async (id: number, userId: number) => {
         select: {
           id: true,
         },
-      }
+      },
     },
   });
 };
@@ -172,4 +169,3 @@ export const getCategoryList = async () => {
 export const getTypeList = async () => {
   return prisma.type.findMany();
 };
-

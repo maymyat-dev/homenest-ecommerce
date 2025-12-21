@@ -85,8 +85,7 @@ export const createPost = [
     const user = req.user;
 
     checkUploadFile(req.file);
-    console.log(req.file);
-    let imageUrl = "";
+    let imageUrl = null;
     if (req.file) {
       const fileId = randomUUID();
       imageUrl = await directUploadCloudinary({
@@ -175,33 +174,48 @@ export const updatePost = [
       );
     }
 
-    let data: any = {
-      title,
-      content,
-      body,
-      image: req.file,
-      category,
-      type,
-      tags,
-    };
-    const postUpdated = await updateOnePost(post.id, data);
+    let imageUrl = undefined;
     if (req.file) {
-      data.image = req.file.filename;
-
-      const splitFileName = req.file.filename.split(".")[0];
-
-      await processImage({
-        filePath: req.file.path,
-        fileName: `${splitFileName}.webp`,
-        postId: postUpdated.id,
+      checkUploadFile(req.file);
+      const fileId = randomUUID();
+      imageUrl = await directUploadCloudinary({
+        buffer: req.file.buffer, // ✅ buffer
+        fileName: `${fileId}.webp`,
         width: 835,
         height: 577,
         quality: 100,
       });
-      const optimizedFile = post.image.split(".")[0] + ".webp";
-      await removeFiles(post.image, optimizedFile);
-      await updateOnePost(postUpdated.id, { image: req.file.filename } as any);
     }
+
+    let data: any = {
+      title,
+      content,
+      body,
+      image: imageUrl,
+      category,
+      type,
+      tags,
+    };
+
+    console.log(data);
+    const postUpdated = await updateOnePost(post.id, data);
+    // if (req.file) {
+    //   data.image = req.file.filename;
+
+    //   const splitFileName = req.file.filename.split(".")[0];
+
+    //   await processImage({
+    //     filePath: req.file.path,
+    //     fileName: `${splitFileName}.webp`,
+    //     postId: postUpdated.id,
+    //     width: 835,
+    //     height: 577,
+    //     quality: 100,
+    //   });
+    //   const optimizedFile = post.image.split(".")[0] + ".webp";
+    //   await removeFiles(post.image, optimizedFile);
+    //   await updateOnePost(postUpdated.id, { image: req.file.filename } as any);
+    // }
 
     await enqueueCacheInvalidation({
       pattern: "posts:*",
@@ -239,9 +253,9 @@ export const deletePost = [
 
     const postDeleted = await deleteOnePost(post!.id);
     console.log("postDeleted: ", post?.image);
-    const optimizedFile = post!.image.split(".")[0] + ".webp";
-    console.log("optimizedFile: ", optimizedFile);
-    await removeFiles(post!.image, optimizedFile);
+    // const optimizedFile = post!.image.split(".")[0] + ".webp";
+    // console.log("optimizedFile: ", optimizedFile);
+    // await removeFiles(post!.image, optimizedFile);
 
     await enqueueCacheInvalidation({
       pattern: "posts:*",

@@ -3,11 +3,18 @@ import { body, validationResult } from "express-validator";
 import { errorCode } from "../../../config/errorCode";
 import { createError } from "../../utils/error";
 import { checkModelIfExist, checkUploadFile } from "../../utils/check";
-import { createOneProduct, deleteOneProduct, getProductById, updateOneProduct } from "../../services/productService";
+import {
+  createOneProduct,
+  deleteOneProduct,
+  getProductById,
+  updateOneProduct,
+} from "../../services/productService";
 import path from "path";
 import { unlink } from "fs/promises";
 import { enqueueImageJob } from "../../jobs/queues/imageQueue";
 import { enqueueCacheInvalidation } from "../../jobs/queues/cacheQueue";
+import { randomUUID } from "crypto";
+import { directUploadCloudinary } from "../../jobs/image/processImage";
 
 interface CustomRequest extends Request {
   userId?: number;
@@ -88,12 +95,29 @@ export const createProduct = [
       tags,
     } = req.body;
 
-    checkUploadFile(req.files && req.files.length > 0);
+    let uploadedUrls: string[] = [];
+    if (req.files) {
+      checkUploadFile(req.files && req.files.length > 0);
+      uploadedUrls = await Promise.all(
+        (req.files as Express.Multer.File[]).map((file) => {
+          const fileId = randomUUID(); // ✅ prevents overwrite
 
+          return directUploadCloudinary({
+            buffer: file.buffer, // ✅ correct
+            fileName: `${fileId}.webp`, // ✅ generated name
+            width: 835,
+            height: 577,
+            quality: 100,
+          });
+        })
+      );
+    }
 
-    const originalFileNames = req.files.map((file: any) => ({
-      path: file.filename,
-    }));
+    console.log("uploadedUrls: ", uploadedUrls);
+
+    // const originalFileNames = req.files.map((file: any) => ({
+    //   path: file.filename,
+    // }));
 
     const data: any = {
       name,
@@ -104,33 +128,32 @@ export const createProduct = [
       category,
       type,
       tags,
-      images: originalFileNames,
+      images: uploadedUrls,
     };
+
     const product = await createOneProduct(data);
 
-   await Promise.all(
-  req.files.map(async (file: any, index: number) => {
-    const splitFileName = file.filename.split(".")[0];
-    
-    const dbImage = product.images[index]; 
+    // await Promise.all(
+    //   req.files.map(async (file: any, index: number) => {
+    //     const splitFileName = file.filename.split(".")[0];
 
-    return enqueueImageJob(
-      {
-        filePath: file.path,
-        fileName: `${splitFileName}.webp`,
-        imageId: dbImage.id,
-        productId: product.id,
-        width: 835,
-        height: 577,
-        quality: 100,
-      }
-    );
-  })
-);
-res.status(201).json({
-  message: "Successfully created new product.",
-  productId: product.id,
-});
+    //     const dbImage = product.images[index];
+
+    //     return enqueueImageJob({
+    //       filePath: file.path,
+    //       fileName: `${splitFileName}.webp`,
+    //       imageId: dbImage.id,
+    //       productId: product.id,
+    //       width: 835,
+    //       height: 577,
+    //       quality: 100,
+    //     });
+    //   })
+    // );
+    res.status(201).json({
+      message: "Successfully created new product.",
+      productId: product.id,
+    });
   },
 ];
 
@@ -159,10 +182,10 @@ export const updateProduct = [
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     const errors = validationResult(req).array({ onlyFirstError: true });
     if (errors.length > 0) {
-      if (req.files && req.files.length > 0) {
-        const originalFiles = req.files.map((file: any) => file.filename);
-        await removeFiles(originalFiles, null);
-      }
+      // if (req.files && req.files.length > 0) {
+      //   const originalFiles = req.files.map((file: any) => file.filename);
+      //   await removeFiles(originalFiles, null);
+      // }
       return next(createError(errors[0].msg, 400, errorCode.invalid));
     }
     const {
@@ -188,12 +211,28 @@ export const updateProduct = [
       );
     }
 
-    let originalFileNames = [];
-    if (req.files && req.files.length > 0) {
-      originalFileNames = req.files.map((file: any) => ({
-        path: file.filename,
-      }));
+    // let originalFileNames = [];
+    // if (req.files && req.files.length > 0) {
+    //   originalFileNames = req.files.map((file: any) => ({
+    //     path: file.filename,
+    //   }));
+    // }
+    let uploadedUrls: string[] = [];
+    if (req.files) {
+      uploadedUrls = await Promise.all(
+        (req.files as Express.Multer.File[]).map((file) => {
+          const fileId = randomUUID();
+          return directUploadCloudinary({
+            buffer: file.buffer,
+            fileName: `${fileId}.webp`,
+            width: 835,
+            height: 577,
+            quality: 100,
+          });
+        })
+      );
     }
+
     const data: any = {
       name,
       description,
@@ -203,62 +242,59 @@ export const updateProduct = [
       category,
       type,
       tags,
-      images: originalFileNames,
+      images: uploadedUrls,
     };
 
-    if (req.files && req.files.length > 0) {
-      await Promise.all(
-        req.files.map(async (file: any) => {
-          const splitFileName = file.filename.split(".")[0];
-          return enqueueImageJob(
-           
-            {
-              filePath: file.path,
-              fileName: `${splitFileName}.webp`,
-              width: 835,
-              height: 577,
-              quality: 100,
-            }
-          );
-        })
-      );
-      // Deleting Old images
-      const orgFiles = product.images.map((img) => img.path);
-      const optFiles = product.images.map(
-        (img) => img.path.split(".")[0] + ".webp"
-      );
-      await removeFiles(orgFiles, optFiles);
-    }
+    // if (req.files && req.files.length > 0) {
+    //   await Promise.all(
+    //     req.files.map(async (file: any) => {
+    //       const splitFileName = file.filename.split(".")[0];
+    //       return enqueueImageJob({
+    //         filePath: file.path,
+    //         fileName: `${splitFileName}.webp`,
+    //         width: 835,
+    //         height: 577,
+    //         quality: 100,
+    //       });
+    //     })
+    //   );
+    //   // Deleting Old images
+    //   const orgFiles = product.images.map((img) => img.path);
+    //   const optFiles = product.images.map(
+    //     (img) => img.path.split(".")[0] + ".webp"
+    //   );
+    //   await removeFiles(orgFiles, optFiles);
+    // }
 
     const productUpdated = await updateOneProduct(product.id, data);
 
-    if (req.files && req.files.length > 0) {
-  await Promise.all(
-    req.files.map(async (file: any, index: number) => {
-      const splitFileName = file.filename.split(".")[0];
-    
-      const dbImage = productUpdated.images.find(img => img.path === file.filename);
+    // if (req.files && req.files.length > 0) {
+    //   await Promise.all(
+    //     req.files.map(async (file: any, index: number) => {
+    //       const splitFileName = file.filename.split(".")[0];
 
-      if (dbImage) {
-        return enqueueImageJob(
-          {
-            filePath: file.path,
-            fileName: `${splitFileName}.webp`,
-            imageId: dbImage.id,
-            productId: productUpdated.id,
-            width: 835,
-            height: 577,
-            quality: 100,
-          }
-        );
-      }
-    })
-  );
-}
-res.status(200).json({
-  message: "Successfully updated product.",
-  productId: productUpdated.id,
-});
+    //       const dbImage = productUpdated.images.find(
+    //         (img) => img.path === file.filename
+    //       );
+
+    //       if (dbImage) {
+    //         return enqueueImageJob({
+    //           filePath: file.path,
+    //           fileName: `${splitFileName}.webp`,
+    //           imageId: dbImage.id,
+    //           productId: productUpdated.id,
+    //           width: 835,
+    //           height: 577,
+    //           quality: 100,
+    //         });
+    //       }
+    //     })
+    //   );
+    // }
+    res.status(200).json({
+      message: "Successfully updated product.",
+      productId: productUpdated.id,
+    });
   },
 ];
 
@@ -277,17 +313,15 @@ export const deleteProduct = [
 
     const productDeleted = await deleteOneProduct(product!.id);
 
-    const orgFiles = product!.images.map((img) => img.path);
-    const optFiles = product!.images.map(
-      (img) => img.path.split(".")[0] + ".webp"
-    );
-    await removeFiles(orgFiles, optFiles);
+    // const orgFiles = product!.images.map((img) => img.path);
+    // const optFiles = product!.images.map(
+    //   (img) => img.path.split(".")[0] + ".webp"
+    // );
+    // await removeFiles(orgFiles, optFiles);
 
-    await enqueueCacheInvalidation(
-      {
-        pattern: "products:*",
-      }
-    );
+    await enqueueCacheInvalidation({
+      pattern: "products:*",
+    });
 
     res.status(200).json({
       message: "Successfully deleted the product",

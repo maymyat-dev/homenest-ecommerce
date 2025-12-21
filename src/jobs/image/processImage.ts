@@ -1,7 +1,6 @@
 import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
 import { prisma } from "../../services/prismaClient";
-import { sendTelegramMessage } from "../../utils/telegram";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
@@ -17,8 +16,6 @@ export async function directUploadCloudinary(data: {
   quality?: number;
 }) {
   try {
-    await sendTelegramMessage(`Processing image: ${data.fileName}`);
-
     const { buffer, fileName, width, height, quality = 80 } = data;
 
     if (!buffer) throw new Error("Image buffer missing");
@@ -57,7 +54,6 @@ export async function directUploadCloudinary(data: {
 
 export async function processImage(data: any) {
   try {
-    await sendTelegramMessage(`Processing image: ${JSON.stringify(data)}`);
     console.log("Processing image:", data);
     const { filePath, imageId, postId, width, height, quality = 80 } = data;
 
@@ -92,7 +88,6 @@ export async function processImage(data: any) {
       });
     }
   } catch (err) {
-    await sendTelegramMessage(`processImage error: ${err}`);
     console.error("processImage error:", err);
     return false;
   }
