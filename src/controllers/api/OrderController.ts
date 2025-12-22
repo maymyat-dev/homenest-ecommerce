@@ -70,24 +70,30 @@ export const createCheckoutSession = [
 
 
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            line_items,
-            mode: "payment",
-            success_url: "http://localhost:5173/success",
-            cancel_url: "http://localhost:5173/cancel",
-            
-            metadata: {
-                userId: String(userId),
-                products: JSON.stringify(
-                    products.map((p: { productId: number; quantity: number, unit_price: number, currency: string }) => ({
-                        productId: p.productId,
-                        quantity: p.quantity,
-                        unit_price: p.unit_price,
-                        currency: p.currency
-                    }))
-                ),
-            },
-            
+          payment_method_types: ["card"],
+          line_items,
+          mode: "payment",
+          success_url: "https://homenest.maymyatmon.com/success",
+          cancel_url: "https://homenest.maymyatmon.com/cancel",
+
+          metadata: {
+            userId: String(userId),
+            products: JSON.stringify(
+              products.map(
+                (p: {
+                  productId: number;
+                  quantity: number;
+                  unit_price: number;
+                  currency: string;
+                }) => ({
+                  productId: p.productId,
+                  quantity: p.quantity,
+                  unit_price: p.unit_price,
+                  currency: p.currency,
+                })
+              )
+            ),
+          },
         });
 
 
