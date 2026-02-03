@@ -2,7 +2,6 @@
 
 **HomeNest** is a high-availability e-commerce engine designed for the premium furniture market. The system prioritizes **low-latency data fetching**, **secure relational data modeling**, and **automated cache management**.
 
-🌐 **Live Demo: **https://homenest.maymyatmon.com**
 
 ---
 
