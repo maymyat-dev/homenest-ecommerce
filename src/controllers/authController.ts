@@ -415,7 +415,7 @@ export const login = [
         // sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
         secure: true, // only true in production
         sameSite: "none",
-        maxAge: 60 * 15 * 1000, // 15 minutes
+        maxAge: 60 * 10 * 1000, // 15 minutes
       })
       .cookie("refreshToken", refreshToken, {
         httpOnly: true,
