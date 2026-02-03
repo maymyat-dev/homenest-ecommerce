@@ -389,7 +389,7 @@ export const login = [
       accessTokenPayload,
       process.env.ACCESS_TOKEN_SECRET!,
       {
-        expiresIn: 60 * 10, // 10 minutes
+        expiresIn: "1d", // 1 day
       }
     );
     const refreshToken = jwt.sign(
